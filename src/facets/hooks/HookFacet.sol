@@ -1,29 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {IHooks} from "v4-core/interfaces/IHooks.sol";
-import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
-import {PoolKey} from "v4-core/types/PoolKey.sol";
-import {BalanceDelta, BalanceDeltaLibrary} from "v4-core/types/BalanceDelta.sol";
-import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/types/BeforeSwapDelta.sol";
+import { IHooks } from "v4-core/interfaces/IHooks.sol";
+import { IPoolManager } from "v4-core/interfaces/IPoolManager.sol";
+import { PoolKey } from "v4-core/types/PoolKey.sol";
+import { BalanceDelta, BalanceDeltaLibrary } from "v4-core/types/BalanceDelta.sol";
+import { BeforeSwapDelta, BeforeSwapDeltaLibrary } from "v4-core/types/BeforeSwapDelta.sol";
 
-/// @notice No-op base implementations of all 8 V4 hook callbacks.
+/// @notice No-op base implementations of the 8 V4 hook callbacks mined into the
+/// hook address (ALL_FLAGS = 0x3FC0). Donate callbacks are intentionally omitted.
 /// Replace any selector via diamondCut to add custom logic.
-contract HookFacet is IHooks {
-    function beforeInitialize(
-        address,
-        PoolKey calldata,
-        uint160
-    ) external virtual override returns (bytes4) {
+contract HookFacet {
+    function beforeInitialize(address, PoolKey calldata, uint160) external virtual returns (bytes4) {
         return IHooks.beforeInitialize.selector;
     }
 
-    function afterInitialize(
-        address,
-        PoolKey calldata,
-        uint160,
-        int24
-    ) external virtual override returns (bytes4) {
+    function afterInitialize(address, PoolKey calldata, uint160, int24) external virtual returns (bytes4) {
         return IHooks.afterInitialize.selector;
     }
 
@@ -32,7 +24,11 @@ contract HookFacet is IHooks {
         PoolKey calldata,
         IPoolManager.ModifyLiquidityParams calldata,
         bytes calldata
-    ) external virtual override returns (bytes4) {
+    )
+        external
+        virtual
+        returns (bytes4)
+    {
         return IHooks.beforeAddLiquidity.selector;
     }
 
@@ -43,7 +39,11 @@ contract HookFacet is IHooks {
         BalanceDelta,
         BalanceDelta,
         bytes calldata
-    ) external virtual override returns (bytes4, BalanceDelta) {
+    )
+        external
+        virtual
+        returns (bytes4, BalanceDelta)
+    {
         return (IHooks.afterAddLiquidity.selector, BalanceDeltaLibrary.ZERO_DELTA);
     }
 
@@ -52,7 +52,11 @@ contract HookFacet is IHooks {
         PoolKey calldata,
         IPoolManager.ModifyLiquidityParams calldata,
         bytes calldata
-    ) external virtual override returns (bytes4) {
+    )
+        external
+        virtual
+        returns (bytes4)
+    {
         return IHooks.beforeRemoveLiquidity.selector;
     }
 
@@ -63,7 +67,11 @@ contract HookFacet is IHooks {
         BalanceDelta,
         BalanceDelta,
         bytes calldata
-    ) external virtual override returns (bytes4, BalanceDelta) {
+    )
+        external
+        virtual
+        returns (bytes4, BalanceDelta)
+    {
         return (IHooks.afterRemoveLiquidity.selector, BalanceDeltaLibrary.ZERO_DELTA);
     }
 
@@ -72,7 +80,11 @@ contract HookFacet is IHooks {
         PoolKey calldata,
         IPoolManager.SwapParams calldata,
         bytes calldata
-    ) external virtual override returns (bytes4, BeforeSwapDelta, uint24) {
+    )
+        external
+        virtual
+        returns (bytes4, BeforeSwapDelta, uint24)
+    {
         return (IHooks.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
     }
 
@@ -82,27 +94,11 @@ contract HookFacet is IHooks {
         IPoolManager.SwapParams calldata,
         BalanceDelta,
         bytes calldata
-    ) external virtual override returns (bytes4, int128) {
+    )
+        external
+        virtual
+        returns (bytes4, int128)
+    {
         return (IHooks.afterSwap.selector, 0);
-    }
-
-    function beforeDonate(
-        address,
-        PoolKey calldata,
-        uint256,
-        uint256,
-        bytes calldata
-    ) external virtual override returns (bytes4) {
-        return IHooks.beforeDonate.selector;
-    }
-
-    function afterDonate(
-        address,
-        PoolKey calldata,
-        uint256,
-        uint256,
-        bytes calldata
-    ) external virtual override returns (bytes4) {
-        return IHooks.afterDonate.selector;
     }
 }

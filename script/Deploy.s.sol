@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Script, console} from "forge-std/Script.sol";
-import {IDiamondCut} from "../src/interfaces/IDiamondCut.sol";
-import {IDiamondLoupe} from "../src/interfaces/IDiamondLoupe.sol";
-import {IERC173} from "../src/interfaces/IERC173.sol";
-import {DiamondCutFacet} from "../src/facets/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "../src/facets/DiamondLoupeFacet.sol";
-import {OwnershipFacet} from "../src/facets/OwnershipFacet.sol";
-import {HookFacet} from "../src/facets/hooks/HookFacet.sol";
-import {HookDiamond} from "../src/HookDiamond.sol";
-import {HookMiner} from "./HookMiner.sol";
-import {IHooks} from "v4-core/interfaces/IHooks.sol";
+import { Script, console } from "forge-std/Script.sol";
+import { IDiamondCut } from "../src/interfaces/IDiamondCut.sol";
+import { IDiamondLoupe } from "../src/interfaces/IDiamondLoupe.sol";
+import { IERC173 } from "../src/interfaces/IERC173.sol";
+import { DiamondCutFacet } from "../src/facets/DiamondCutFacet.sol";
+import { DiamondLoupeFacet } from "../src/facets/DiamondLoupeFacet.sol";
+import { OwnershipFacet } from "../src/facets/OwnershipFacet.sol";
+import { HookFacet } from "../src/facets/hooks/HookFacet.sol";
+import { HookDiamond } from "../src/HookDiamond.sol";
+import { HookMiner } from "./HookMiner.sol";
+import { IHooks } from "v4-core/interfaces/IHooks.sol";
 
 contract DeployHookDiamond is Script {
     function run() external {
@@ -30,9 +30,7 @@ contract DeployHookDiamond is Script {
         bytes4[] memory cutSelectors = new bytes4[](1);
         cutSelectors[0] = IDiamondCut.diamondCut.selector;
         cuts[0] = IDiamondCut.FacetCut({
-            facetAddress: address(cutFacet),
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: cutSelectors
+            facetAddress: address(cutFacet), action: IDiamondCut.FacetCutAction.Add, functionSelectors: cutSelectors
         });
 
         bytes4[] memory loupeSelectors = new bytes4[](4);
@@ -41,9 +39,7 @@ contract DeployHookDiamond is Script {
         loupeSelectors[2] = IDiamondLoupe.facetAddresses.selector;
         loupeSelectors[3] = IDiamondLoupe.facetAddress.selector;
         cuts[1] = IDiamondCut.FacetCut({
-            facetAddress: address(loupeFacet),
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: loupeSelectors
+            facetAddress: address(loupeFacet), action: IDiamondCut.FacetCutAction.Add, functionSelectors: loupeSelectors
         });
 
         bytes4[] memory ownerSelectors = new bytes4[](2);
@@ -65,26 +61,18 @@ contract DeployHookDiamond is Script {
         hookSelectors[6] = IHooks.beforeSwap.selector;
         hookSelectors[7] = IHooks.afterSwap.selector;
         cuts[3] = IDiamondCut.FacetCut({
-            facetAddress: address(hookFacet),
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: hookSelectors
+            facetAddress: address(hookFacet), action: IDiamondCut.FacetCutAction.Add, functionSelectors: hookSelectors
         });
 
         // 3. Mine CREATE2 salt for correct permission bits
         bytes memory constructorArgs = abi.encode(owner, cuts, address(0), bytes(""));
-        (, bytes32 salt) = HookMiner.find(
-            owner,
-            HookMiner.ALL_FLAGS,
-            type(HookDiamond).creationCode,
-            constructorArgs
-        );
+        (, bytes32 salt) = HookMiner.find(owner, HookMiner.ALL_FLAGS, type(HookDiamond).creationCode, constructorArgs);
 
         // 4. Deploy via CREATE2
-        HookDiamond diamond = new HookDiamond{salt: salt}(owner, cuts, address(0), bytes(""));
+        HookDiamond diamond = new HookDiamond{ salt: salt }(owner, cuts, address(0), bytes(""));
 
         require(
-            uint160(address(diamond)) & HookMiner.ALL_FLAGS == HookMiner.ALL_FLAGS,
-            "Deploy: permission bits not set"
+            uint160(address(diamond)) & HookMiner.ALL_FLAGS == HookMiner.ALL_FLAGS, "Deploy: permission bits not set"
         );
 
         console.log("HookDiamond deployed at:", address(diamond));

@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
+import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
 
 library LibDiamond {
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("diamond.standard.diamond.storage");
     bytes32 constant APP_STORAGE_POSITION = keccak256("hook.diamond.app.storage");
 
-    // ─── AppStorage ──────────────────────────────────────────────────────────────
+    // ─── AppStorage
+    // ──────────────────────────────────────────────────────────────
     // Add your protocol state here. All facets access shared state through this struct.
     // Never declare storage variables at the facet level — always use appStorage().
 
@@ -38,7 +39,8 @@ library LibDiamond {
         mapping(bytes32 => FeeConfig) feeConfig;               // per-pool tier config
     }
 
-    // ─── Diamond internals ────────────────────────────────────────────────────────
+    // ─── Diamond internals
+    // ────────────────────────────────────────────────────────
 
     struct FacetAddressAndPosition {
         address facetAddress;
@@ -95,7 +97,8 @@ library LibDiamond {
         require(msg.sender == diamondStorage().contractOwner, "LibDiamond: Must be contract owner");
     }
 
-    // ─── DiamondCut ───────────────────────────────────────────────────────────────
+    // ─── DiamondCut
+    // ───────────────────────────────────────────────────────────────
 
     function diamondCut(IDiamondCut.FacetCut[] memory _diamondCut, address _init, bytes memory _calldata) internal {
         for (uint256 facetIndex; facetIndex < _diamondCut.length; facetIndex++) {
@@ -171,7 +174,9 @@ library LibDiamond {
         bytes4 _selector,
         uint96 _selectorPosition,
         address _facetAddress
-    ) internal {
+    )
+        internal
+    {
         ds.selectorToFacetAndPosition[_selector].functionSelectorPosition = _selectorPosition;
         ds.facetFunctionSelectors[_facetAddress].functionSelectors.push(_selector);
         ds.selectorToFacetAndPosition[_selector].facetAddress = _facetAddress;

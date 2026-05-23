@@ -10,12 +10,11 @@ HookDiamond (proxy)
 ├── DiamondCutFacet      ← owner-only upgrade control
 ├── DiamondLoupeFacet    ← read facet/selector mappings
 ├── OwnershipFacet       ← ERC-173 ownership
-└── HookFacet            ← all 10 V4 callbacks (no-op base)
+└── HookFacet            ← all 8 V4 callbacks (no-op base)
      ├── beforeInitialize / afterInitialize
      ├── beforeAddLiquidity / afterAddLiquidity
      ├── beforeRemoveLiquidity / afterRemoveLiquidity
-     ├── beforeSwap / afterSwap
-     └── beforeDonate / afterDonate
+     └── beforeSwap / afterSwap
 ```
 
 `HookDiamond.sol` is a pure proxy. Its `fallback()` reads `msg.sig` from a mapping in storage and `delegatecall`s the matching facet. The proxy never knows V4's ABI — assembly `returndatacopy` passes the raw return bytes through, so typed tuple returns (`BeforeSwapDelta`, `BalanceDelta`) work without any ABI encoding at the proxy layer.
@@ -123,12 +122,12 @@ src/
     DiamondLoupeFacet.sol
     OwnershipFacet.sol
     hooks/
-      HookFacet.sol               ← no-op base for all 10 callbacks
+      HookFacet.sol               ← no-op base for all 8 callbacks
       ExampleBeforeSwapFacet.sol  ← example override with AppStorage usage
 script/
   Deploy.s.sol                    ← CREATE2 deploy with permission-bit salt search
   HookMiner.sol                   ← brute-force CREATE2 salt finder
 test/
-  HookDiamond.t.sol               ← routing tests for all 10 callbacks
+  HookDiamond.t.sol               ← routing tests for all 8 callbacks
   DiamondCut.t.sol                ← upgrade + access-control tests
 ```

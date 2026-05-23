@@ -18,19 +18,18 @@ library HookMiner {
         uint160 flags,
         bytes memory creationCode,
         bytes memory constructorArgs
-    ) internal pure returns (address hookAddress, bytes32 salt) {
+    )
+        internal
+        pure
+        returns (address hookAddress, bytes32 salt)
+    {
         bytes memory bytecode = abi.encodePacked(creationCode, constructorArgs);
         bytes32 bytecodeHash = keccak256(bytecode);
         uint256 saltNum = 0;
         while (true) {
             salt = bytes32(saltNum);
-            hookAddress = address(
-                uint160(
-                    uint256(
-                        keccak256(abi.encodePacked(bytes1(0xff), deployer, salt, bytecodeHash))
-                    )
-                )
-            );
+            hookAddress =
+                address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), deployer, salt, bytecodeHash)))));
             if (uint160(hookAddress) & flags == flags) break;
             unchecked {
                 saltNum++;

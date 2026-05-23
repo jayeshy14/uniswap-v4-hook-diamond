@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {IDiamondCut} from "./interfaces/IDiamondCut.sol";
-import {LibDiamond} from "./libraries/LibDiamond.sol";
+import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
+import { LibDiamond } from "./libraries/LibDiamond.sol";
 
 /// @notice Diamond proxy that routes each Uniswap V4 hook callback to its registered facet.
 /// The hook address encodes V4 permission bits — mine the correct CREATE2 salt with HookMiner.
@@ -13,7 +13,8 @@ contract HookDiamond {
         IDiamondCut.FacetCut[] memory _diamondCut,
         address _init,
         bytes memory _calldata
-    ) payable {
+    )
+        payable {
         LibDiamond.setContractOwner(_contractOwner);
         LibDiamond.diamondCut(_diamondCut, _init, _calldata);
     }
@@ -36,5 +37,5 @@ contract HookDiamond {
         }
     }
 
-    receive() external payable {}
+    receive() external payable { }
 }
