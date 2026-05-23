@@ -1,23 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test} from "forge-std/Test.sol";
-import {IHooks} from "v4-core/interfaces/IHooks.sol";
-import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
-import {PoolKey} from "v4-core/types/PoolKey.sol";
-import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
-import {Currency} from "v4-core/types/Currency.sol";
-import {BalanceDelta, BalanceDeltaLibrary} from "v4-core/types/BalanceDelta.sol";
-import {BeforeSwapDelta} from "v4-core/types/BeforeSwapDelta.sol";
-import {LPFeeLibrary} from "v4-core/libraries/LPFeeLibrary.sol";
+import { Test } from "forge-std/Test.sol";
+import { IHooks } from "v4-core/interfaces/IHooks.sol";
+import { IPoolManager } from "v4-core/interfaces/IPoolManager.sol";
+import { PoolKey } from "v4-core/types/PoolKey.sol";
+import { PoolId, PoolIdLibrary } from "v4-core/types/PoolId.sol";
+import { Currency } from "v4-core/types/Currency.sol";
+import { BalanceDelta, BalanceDeltaLibrary } from "v4-core/types/BalanceDelta.sol";
+import { BeforeSwapDelta } from "v4-core/types/BeforeSwapDelta.sol";
+import { LPFeeLibrary } from "v4-core/libraries/LPFeeLibrary.sol";
 
-import {HookDiamond} from "../src/HookDiamond.sol";
-import {IDiamondCut} from "../src/interfaces/IDiamondCut.sol";
-import {DiamondCutFacet} from "../src/facets/DiamondCutFacet.sol";
-import {DynamicFeeFacet} from "../src/facets/hooks/DynamicFeeFacet.sol";
-import {LibDiamond} from "../src/libraries/LibDiamond.sol";
+import { HookDiamond } from "../src/HookDiamond.sol";
+import { IDiamondCut } from "../src/interfaces/IDiamondCut.sol";
+import { DiamondCutFacet } from "../src/facets/DiamondCutFacet.sol";
+import { DynamicFeeFacet } from "../src/facets/hooks/DynamicFeeFacet.sol";
+import { LibDiamond } from "../src/libraries/LibDiamond.sol";
 
-// ─── Mock PoolManager ─────────────────────────────────────────────────────────
+// ─── Mock PoolManager
+// ─────────────────────────────────────────────────────────
 
 contract MockPoolManager {
     uint24 public lastFeeUpdate;
@@ -45,7 +46,8 @@ contract MockPoolManager {
     }
 }
 
-// ─── Test ─────────────────────────────────────────────────────────────────────
+// ─── Test
+// ─────────────────────────────────────────────────────────────────────
 
 contract DynamicFeeTest is Test {
     using PoolIdLibrary for PoolKey;
@@ -73,9 +75,7 @@ contract DynamicFeeTest is Test {
         bytes4[] memory cutSelectors = new bytes4[](1);
         cutSelectors[0] = DiamondCutFacet.diamondCut.selector;
         cuts[0] = IDiamondCut.FacetCut({
-            facetAddress: address(cutFacet),
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: cutSelectors
+            facetAddress: address(cutFacet), action: IDiamondCut.FacetCutAction.Add, functionSelectors: cutSelectors
         });
 
         bytes4[] memory dynSelectors = new bytes4[](7);
@@ -87,9 +87,7 @@ contract DynamicFeeTest is Test {
         dynSelectors[5] = DynamicFeeFacet.getCurrentFee.selector;
         dynSelectors[6] = DynamicFeeFacet.getCurrentVolatility.selector;
         cuts[1] = IDiamondCut.FacetCut({
-            facetAddress: address(facet),
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: dynSelectors
+            facetAddress: address(facet), action: IDiamondCut.FacetCutAction.Add, functionSelectors: dynSelectors
         });
 
         diamond = new HookDiamond(owner, cuts, address(0), "");
@@ -137,7 +135,7 @@ contract DynamicFeeTest is Test {
             _simulateSwap(price);
         }
 
-        assertEq(DynamicFeeFacet(address(diamond)).getCurrentFee(poolId), 3_000);
+        assertEq(DynamicFeeFacet(address(diamond)).getCurrentFee(poolId), 3000);
     }
 
     function test_HighVolatilityMaximizesFee() public {
@@ -170,20 +168,24 @@ contract DynamicFeeTest is Test {
     }
 
     function test_CustomFeeConfig() public {
-        DynamicFeeFacet(address(diamond)).setFeeConfig(poolId, 100, 1_000, 5_000, 30, 100);
+        DynamicFeeFacet(address(diamond)).setFeeConfig(poolId, 100, 1000, 5000, 30, 100);
 
         // Move ~50 bps total — should hit medium tier of new config (threshold 30).
         uint160 price = 1e18;
         price = price + uint160(price * 50 / 10_000);
         _simulateSwap(price);
 
-        assertEq(DynamicFeeFacet(address(diamond)).getCurrentFee(poolId), 1_000);
+        assertEq(DynamicFeeFacet(address(diamond)).getCurrentFee(poolId), 1000);
     }
 
     function test_BeforeSwapReturnsZeroOverride() public {
-        (, BeforeSwapDelta bsDelta, uint24 override_) = DynamicFeeFacet(address(diamond)).beforeSwap(
-            address(0), key, IPoolManager.SwapParams({zeroForOne: true, amountSpecified: 1e18, sqrtPriceLimitX96: 0}), ""
-        );
+        (, BeforeSwapDelta bsDelta, uint24 override_) = DynamicFeeFacet(address(diamond))
+            .beforeSwap(
+                address(0),
+                key,
+                IPoolManager.SwapParams({ zeroForOne: true, amountSpecified: 1e18, sqrtPriceLimitX96: 0 }),
+                ""
+            );
         assertEq(uint24(override_), 0);
     }
 
@@ -198,16 +200,18 @@ contract DynamicFeeTest is Test {
         assertTrue(vol >= 200, "volatility should exceed high threshold");
     }
 
-    // ─── Helpers ─────────────────────────────────────────────────────────────────
+    // ─── Helpers
+    // ─────────────────────────────────────────────────────────────────
 
     function _simulateSwap(uint160 newPrice) internal {
         mockPM.setSqrtPrice(poolId, newPrice);
-        DynamicFeeFacet(address(diamond)).afterSwap(
-            address(0),
-            key,
-            IPoolManager.SwapParams({zeroForOne: true, amountSpecified: 1e18, sqrtPriceLimitX96: 0}),
-            BalanceDeltaLibrary.ZERO_DELTA,
-            ""
-        );
+        DynamicFeeFacet(address(diamond))
+            .afterSwap(
+                address(0),
+                key,
+                IPoolManager.SwapParams({ zeroForOne: true, amountSpecified: 1e18, sqrtPriceLimitX96: 0 }),
+                BalanceDeltaLibrary.ZERO_DELTA,
+                ""
+            );
     }
 }

@@ -21,11 +21,11 @@ library LibDiamond {
 
     // Per-pool fee tiers and volatility thresholds (in bps of total sqrtPrice movement).
     struct FeeConfig {
-        uint24 baseFee;         // low-vol fee,    e.g. 500   = 0.05%
-        uint24 mediumFee;       // medium-vol fee, e.g. 3000  = 0.30%
-        uint24 highFee;         // high-vol fee,   e.g. 10000 = 1.00%
+        uint24 baseFee; // low-vol fee,    e.g. 500   = 0.05%
+        uint24 mediumFee; // medium-vol fee, e.g. 3000  = 0.30%
+        uint24 highFee; // high-vol fee,   e.g. 10000 = 1.00%
         uint32 mediumThreshold; // total movement in bps to enter medium tier, e.g. 50
-        uint32 highThreshold;   // total movement in bps to enter high tier,   e.g. 200
+        uint32 highThreshold; // total movement in bps to enter high tier,   e.g. 200
     }
 
     struct AppStorage {
@@ -33,10 +33,10 @@ library LibDiamond {
         // DynamicFeeFacet state
         address poolManager;
         mapping(bytes32 => PriceObservation[10]) observations; // circular buffer per pool
-        mapping(bytes32 => uint8) obsIndex;                    // next write position
-        mapping(bytes32 => uint8) obsCount;                    // number of filled slots (capped at WINDOW)
-        mapping(bytes32 => uint24) currentFee;                 // last computed fee
-        mapping(bytes32 => FeeConfig) feeConfig;               // per-pool tier config
+        mapping(bytes32 => uint8) obsIndex; // next write position
+        mapping(bytes32 => uint8) obsCount; // number of filled slots (capped at WINDOW)
+        mapping(bytes32 => uint24) currentFee; // last computed fee
+        mapping(bytes32 => FeeConfig) feeConfig; // per-pool tier config
     }
 
     // ─── Diamond internals

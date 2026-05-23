@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {IHooks} from "v4-core/interfaces/IHooks.sol";
-import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
-import {PoolKey} from "v4-core/types/PoolKey.sol";
-import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
-import {BalanceDelta} from "v4-core/types/BalanceDelta.sol";
-import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/types/BeforeSwapDelta.sol";
-import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
-import {LPFeeLibrary} from "v4-core/libraries/LPFeeLibrary.sol";
-import {LibDiamond} from "../../libraries/LibDiamond.sol";
+import { IHooks } from "v4-core/interfaces/IHooks.sol";
+import { IPoolManager } from "v4-core/interfaces/IPoolManager.sol";
+import { PoolKey } from "v4-core/types/PoolKey.sol";
+import { PoolId, PoolIdLibrary } from "v4-core/types/PoolId.sol";
+import { BalanceDelta } from "v4-core/types/BalanceDelta.sol";
+import { BeforeSwapDelta, BeforeSwapDeltaLibrary } from "v4-core/types/BeforeSwapDelta.sol";
+import { StateLibrary } from "v4-core/libraries/StateLibrary.sol";
+import { LPFeeLibrary } from "v4-core/libraries/LPFeeLibrary.sol";
+import { LibDiamond } from "../../libraries/LibDiamond.sol";
 
 /// @notice Diamond facet that adjusts LP fees dynamically based on realized price volatility.
 ///
@@ -27,7 +27,8 @@ contract DynamicFeeFacet {
 
     uint8 private constant WINDOW = LibDiamond.OBSERVATION_WINDOW;
 
-    // ─── Admin ───────────────────────────────────────────────────────────────────
+    // ─── Admin
+    // ───────────────────────────────────────────────────────────────────
 
     function setPoolManager(address _poolManager) external {
         LibDiamond.enforceIsContractOwner();
@@ -48,7 +49,9 @@ contract DynamicFeeFacet {
         uint24 highFee,
         uint32 mediumThreshold,
         uint32 highThreshold
-    ) external {
+    )
+        external
+    {
         LibDiamond.enforceIsContractOwner();
         require(baseFee <= LPFeeLibrary.MAX_LP_FEE, "baseFee exceeds max");
         require(mediumFee <= LPFeeLibrary.MAX_LP_FEE, "mediumFee exceeds max");
@@ -64,31 +67,23 @@ contract DynamicFeeFacet {
         });
     }
 
-    // ─── Hook callbacks ───────────────────────────────────────────────────────────
+    // ─── Hook callbacks
+    // ───────────────────────────────────────────────────────────
 
     /// @notice Seeds the first observation and initializes fee config with defaults.
-    function afterInitialize(
-        address,
-        PoolKey calldata key,
-        uint160 sqrtPriceX96,
-        int24
-    ) external returns (bytes4) {
+    function afterInitialize(address, PoolKey calldata key, uint160 sqrtPriceX96, int24) external returns (bytes4) {
         LibDiamond.AppStorage storage s = LibDiamond.appStorage();
         bytes32 id = PoolId.unwrap(key.toId());
 
         s.observations[id][0] =
-            LibDiamond.PriceObservation({timestamp: uint32(block.timestamp), sqrtPriceX96: sqrtPriceX96});
+            LibDiamond.PriceObservation({ timestamp: uint32(block.timestamp), sqrtPriceX96: sqrtPriceX96 });
         s.obsIndex[id] = 1;
         s.obsCount[id] = 1;
 
         // Apply defaults only if the owner hasn't pre-configured this pool.
         if (s.feeConfig[id].baseFee == 0) {
             s.feeConfig[id] = LibDiamond.FeeConfig({
-                baseFee: 500,
-                mediumFee: 3_000,
-                highFee: 10_000,
-                mediumThreshold: 50,
-                highThreshold: 200
+                baseFee: 500, mediumFee: 3000, highFee: 10_000, mediumThreshold: 50, highThreshold: 200
             });
         }
         s.currentFee[id] = s.feeConfig[id].baseFee;
@@ -103,7 +98,11 @@ contract DynamicFeeFacet {
         PoolKey calldata,
         IPoolManager.SwapParams calldata,
         bytes calldata
-    ) external pure returns (bytes4, BeforeSwapDelta, uint24) {
+    )
+        external
+        pure
+        returns (bytes4, BeforeSwapDelta, uint24)
+    {
         return (IHooks.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
     }
 
@@ -114,7 +113,10 @@ contract DynamicFeeFacet {
         IPoolManager.SwapParams calldata,
         BalanceDelta,
         bytes calldata
-    ) external returns (bytes4, int128) {
+    )
+        external
+        returns (bytes4, int128)
+    {
         LibDiamond.AppStorage storage s = LibDiamond.appStorage();
         bytes32 id = PoolId.unwrap(key.toId());
 
@@ -124,7 +126,7 @@ contract DynamicFeeFacet {
         // Write to circular buffer.
         uint8 idx = s.obsIndex[id];
         s.observations[id][idx] =
-            LibDiamond.PriceObservation({timestamp: uint32(block.timestamp), sqrtPriceX96: sqrtPriceX96});
+            LibDiamond.PriceObservation({ timestamp: uint32(block.timestamp), sqrtPriceX96: sqrtPriceX96 });
         s.obsIndex[id] = (idx + 1) % WINDOW;
         if (s.obsCount[id] < WINDOW) s.obsCount[id]++;
 
@@ -140,7 +142,8 @@ contract DynamicFeeFacet {
         return (IHooks.afterSwap.selector, 0);
     }
 
-    // ─── Views ────────────────────────────────────────────────────────────────────
+    // ─── Views
+    // ────────────────────────────────────────────────────────────────────
 
     function getCurrentFee(bytes32 poolId) external view returns (uint24) {
         return LibDiamond.appStorage().currentFee[poolId];
@@ -154,7 +157,8 @@ contract DynamicFeeFacet {
         return LibDiamond.appStorage().feeConfig[poolId];
     }
 
-    // ─── Internal ─────────────────────────────────────────────────────────────────
+    // ─── Internal
+    // ─────────────────────────────────────────────────────────────────
 
     /// @dev Sums |ΔsqrtPrice / sqrtPrice_prev| in bps over the circular observation buffer.
     ///      Returns 0 when fewer than 2 observations exist.
@@ -169,9 +173,7 @@ contract DynamicFeeFacet {
 
         for (uint8 i = 1; i < count; i++) {
             uint160 currPrice = s.observations[id][(startIdx + i) % WINDOW].sqrtPriceX96;
-            uint256 diff = currPrice > prevPrice
-                ? uint256(currPrice - prevPrice)
-                : uint256(prevPrice - currPrice);
+            uint256 diff = currPrice > prevPrice ? uint256(currPrice - prevPrice) : uint256(prevPrice - currPrice);
             // movement in bps relative to the previous observation
             vol += (diff * 10_000) / uint256(prevPrice);
             prevPrice = currPrice;
