@@ -130,4 +130,6 @@ script/
 test/
   HookDiamond.t.sol               ← routing tests for all 8 callbacks
   DiamondCut.t.sol                ← upgrade + access-control tests
+  DynamicFee.t.sol                ← volatility-based fee facet tests
+  HookIntegration.t.sol           ← end-to-end against a real V4 PoolManager
 ```
