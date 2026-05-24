@@ -47,30 +47,29 @@ contract HookIntegrationTest is Test {
     address owner = address(this);
 
     function setUp() public {
-        // ─── Real V4 stack ────────────────────────────────────────────────
+        // Real V4 stack
         manager = new PoolManager(address(this));
         lpRouter = new PoolModifyLiquidityTest(IPoolManager(address(manager)));
         swapRouter = new PoolSwapTest(IPoolManager(address(manager)));
 
-        // ─── Tokens (sorted) ──────────────────────────────────────────────
+        // Tokens (sorted)
         TestERC20 tokenA = new TestERC20(1e30);
         TestERC20 tokenB = new TestERC20(1e30);
-        (TestERC20 token0, TestERC20 token1) =
-            address(tokenA) < address(tokenB) ? (tokenA, tokenB) : (tokenB, tokenA);
+        (TestERC20 token0, TestERC20 token1) = address(tokenA) < address(tokenB) ? (tokenA, tokenB) : (tokenB, tokenA);
 
         token0.approve(address(lpRouter), type(uint256).max);
         token1.approve(address(lpRouter), type(uint256).max);
         token0.approve(address(swapRouter), type(uint256).max);
         token1.approve(address(swapRouter), type(uint256).max);
 
-        // ─── Deploy facets ────────────────────────────────────────────────
+        // Deploy facets
         DiamondCutFacet cutFacet = new DiamondCutFacet();
         DiamondLoupeFacet loupeFacet = new DiamondLoupeFacet();
         OwnershipFacet ownershipFacet = new OwnershipFacet();
         HookFacet hookFacet = new HookFacet();
         ExampleBeforeSwapFacet beforeSwapFacet = new ExampleBeforeSwapFacet();
 
-        // ─── Build the cut ────────────────────────────────────────────────
+        // Build the cut.
         // beforeSwap is routed to ExampleBeforeSwapFacet (increments swapCount);
         // the other 7 callbacks go to the no-op HookFacet.
         IDiamondCut.FacetCut[] memory cuts = new IDiamondCut.FacetCut[](5);
@@ -78,9 +77,7 @@ contract HookIntegrationTest is Test {
         bytes4[] memory cutSelectors = new bytes4[](1);
         cutSelectors[0] = IDiamondCut.diamondCut.selector;
         cuts[0] = IDiamondCut.FacetCut({
-            facetAddress: address(cutFacet),
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: cutSelectors
+            facetAddress: address(cutFacet), action: IDiamondCut.FacetCutAction.Add, functionSelectors: cutSelectors
         });
 
         bytes4[] memory loupeSelectors = new bytes4[](4);
@@ -89,9 +86,7 @@ contract HookIntegrationTest is Test {
         loupeSelectors[2] = IDiamondLoupe.facetAddresses.selector;
         loupeSelectors[3] = IDiamondLoupe.facetAddress.selector;
         cuts[1] = IDiamondCut.FacetCut({
-            facetAddress: address(loupeFacet),
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: loupeSelectors
+            facetAddress: address(loupeFacet), action: IDiamondCut.FacetCutAction.Add, functionSelectors: loupeSelectors
         });
 
         bytes4[] memory ownerSelectors = new bytes4[](2);
@@ -112,9 +107,7 @@ contract HookIntegrationTest is Test {
         hookSelectors[5] = IHooks.afterRemoveLiquidity.selector;
         hookSelectors[6] = IHooks.afterSwap.selector;
         cuts[3] = IDiamondCut.FacetCut({
-            facetAddress: address(hookFacet),
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: hookSelectors
+            facetAddress: address(hookFacet), action: IDiamondCut.FacetCutAction.Add, functionSelectors: hookSelectors
         });
 
         bytes4[] memory beforeSwapSelectors = new bytes4[](1);
@@ -125,7 +118,7 @@ contract HookIntegrationTest is Test {
             functionSelectors: beforeSwapSelectors
         });
 
-        // ─── Mine the permission-bit address and CREATE2 deploy ───────────
+        // Mine the permission-bit address and CREATE2 deploy.
         bytes memory constructorArgs = abi.encode(owner, cuts, address(0), bytes(""));
         (address mined, bytes32 salt) =
             HookMiner.find(address(this), HookMiner.ALL_FLAGS, type(HookDiamond).creationCode, constructorArgs);
@@ -133,7 +126,7 @@ contract HookIntegrationTest is Test {
         diamond = new HookDiamond{ salt: salt }(owner, cuts, address(0), bytes(""));
         assertEq(address(diamond), mined, "deployed address != mined address");
 
-        // ─── Build the pool key ───────────────────────────────────────────
+        // Build the pool key.
         key = PoolKey({
             currency0: Currency.wrap(address(token0)),
             currency1: Currency.wrap(address(token1)),
@@ -147,7 +140,9 @@ contract HookIntegrationTest is Test {
     /// otherwise the PoolManager would reject it.
     function test_minedAddressHasAllPermissionBits() public view {
         assertEq(
-            uint160(address(diamond)) & HookMiner.ALL_FLAGS, HookMiner.ALL_FLAGS, "mined address missing permission bits"
+            uint160(address(diamond)) & HookMiner.ALL_FLAGS,
+            HookMiner.ALL_FLAGS,
+            "mined address missing permission bits"
         );
     }
 
@@ -163,10 +158,7 @@ contract HookIntegrationTest is Test {
         lpRouter.modifyLiquidity(
             key,
             IPoolManager.ModifyLiquidityParams({
-                tickLower: -120,
-                tickUpper: 120,
-                liquidityDelta: 1e21,
-                salt: bytes32(0)
+                tickLower: -120, tickUpper: 120, liquidityDelta: 1e21, salt: bytes32(0)
             }),
             bytes("")
         );
@@ -177,9 +169,7 @@ contract HookIntegrationTest is Test {
         swapRouter.swap(
             key,
             IPoolManager.SwapParams({
-                zeroForOne: true,
-                amountSpecified: -1e15,
-                sqrtPriceLimitX96: MIN_SQRT_PRICE + 1
+                zeroForOne: true, amountSpecified: -1e15, sqrtPriceLimitX96: MIN_SQRT_PRICE + 1
             }),
             PoolSwapTest.TestSettings({ takeClaims: false, settleUsingBurn: false }),
             bytes("")
