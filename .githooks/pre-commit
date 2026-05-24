@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Auto-format staged Solidity files with `forge fmt` before each commit,
+# then re-stage them so the commit is always fmt-clean (matches CI's `forge fmt --check`).
+set -euo pipefail
+
+files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.sol$' || true)
+[ -z "$files" ] && exit 0
+
+forge fmt $files
+git add $files

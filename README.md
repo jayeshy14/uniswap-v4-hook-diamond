@@ -110,6 +110,12 @@ forge test
 
 Requirements: [Foundry](https://book.getfoundry.sh/), solc 0.8.24. `via_ir = true` is set in `foundry.toml` and is required — facet contracts hit stack-depth limits without the IR pipeline.
 
+A pre-commit hook auto-runs `forge fmt` on staged Solidity files (CI enforces `forge fmt --check`). Enable it once after cloning:
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## Project structure
 
 ```
